@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Dev stuff
+ProjectEarth Server/
+
+# Generated documentation
+documentation/
