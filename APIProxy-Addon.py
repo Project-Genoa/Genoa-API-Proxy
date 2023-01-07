@@ -54,45 +54,49 @@ An endpoint
         return '\n'.join(table)
 
     def response(self, flow):
-        docFile = self.template.replace("[REQUEST_PATH]", flow.request.path.split('?')[0])
-        docFile = docFile.replace("[REQUEST_TYPE]", flow.request.method)
+        if ('availableresourcepack' in flow.request.path):
+            print('streaming...')
+            flow.response.stream = True
+        else:
+            docFile = self.template.replace("[REQUEST_PATH]", flow.request.path.split('?')[0])
+            docFile = docFile.replace("[REQUEST_TYPE]", flow.request.method)
 
-        if (flow.response.status_code == 200):
-            try:
-                docFile = docFile.replace("[RESPONSE_JSON]", json.dumps(json.loads(str(flow.response.content, encoding='utf-8')), indent=4))
-            except:
-                docFile = docFile.replace("[RESPONSE_JSON]", str(flow.response.content, encoding='utf-8'))
-
-            if (flow.request.method == 'GET'):
-                #print(flow.request.query)
-                if (len(list(flow.request.query.keys())) > 0):
-                    docFile = docFile.replace("[REQUEST_TABLE]", self.createTable(flow.request.query))
-                else:
-                    docFile = docFile.replace("[REQUEST_TABLE]", "[NO ARGUMENTS]")
-            else:
-                if (str(flow.request.content, encoding='utf-8') != '' and str(flow.request.content, encoding='utf-8') != None):
-                    docFile = docFile.replace("[REQUEST_TABLE]", self.createTable(json.loads(str(flow.request.content, encoding='utf-8'))))
-                else:
-                    docFile = docFile.replace("[REQUEST_TABLE]", "[NO ARGUMENTS]")
-
-            try:
-                if (len(list(json.loads(str(flow.response.content, encoding='utf-8')))) < 100 ):
-                    docFile = docFile.replace("[RESPONSE_TABLE]", self.createTable(json.loads(str(flow.response.content, encoding='utf-8'))["result"]))
-                else:
-                    docFile = docFile.replace("[RESPONSE_TABLE]", "[TOO MANY PARAMETERS]")
-            except:
+            if (flow.response.status_code == 200):
                 try:
-                    docFile = docFile.replace("[RESPONSE_TABLE]", self.createTable(json.loads(str(flow.response.content, encoding='utf-8'))))
+                    docFile = docFile.replace("[RESPONSE_JSON]", json.dumps(json.loads(str(flow.response.content, encoding='utf-8')), indent=4))
                 except:
-                    pass
+                    docFile = docFile.replace("[RESPONSE_JSON]", str(flow.response.content, encoding='utf-8'))
+
+                if (flow.request.method == 'GET'):
+                    #print(flow.request.query)
+                    if (len(list(flow.request.query.keys())) > 0):
+                        docFile = docFile.replace("[REQUEST_TABLE]", self.createTable(flow.request.query))
+                    else:
+                        docFile = docFile.replace("[REQUEST_TABLE]", "[NO ARGUMENTS]")
+                else:
+                    if (str(flow.request.content, encoding='utf-8') != '' and str(flow.request.content, encoding='utf-8') != None):
+                        docFile = docFile.replace("[REQUEST_TABLE]", self.createTable(json.loads(str(flow.request.content, encoding='utf-8'))))
+                    else:
+                        docFile = docFile.replace("[REQUEST_TABLE]", "[NO ARGUMENTS]")
+
+                try:
+                    if (len(list(json.loads(str(flow.response.content, encoding='utf-8')))) < 100 ):
+                        docFile = docFile.replace("[RESPONSE_TABLE]", self.createTable(json.loads(str(flow.response.content, encoding='utf-8'))["result"]))
+                    else:
+                        docFile = docFile.replace("[RESPONSE_TABLE]", "[TOO MANY PARAMETERS]")
+                except:
+                    try:
+                        docFile = docFile.replace("[RESPONSE_TABLE]", self.createTable(json.loads(str(flow.response.content, encoding='utf-8'))))
+                    except:
+                        pass
 
 
-            savePath = os.path.join(flow.request.path.split('?')[0])
-            savePath = './documentation' + savePath + '.md'
+                savePath = os.path.join(flow.request.path.split('?')[0])
+                savePath = './documentation' + savePath + '.md'
 
-            os.makedirs('/'.join(savePath.split('/')[:-1]), exist_ok=True)#
-            with open(savePath, 'w') as file:
-                file.write(docFile)
+                os.makedirs('/'.join(savePath.split('/')[:-1]), exist_ok=True)#
+                with open(savePath, 'w') as file:
+                    file.write(docFile)
 
 
 addons = [ProxyAddon()]
